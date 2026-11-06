@@ -1,172 +1,132 @@
-# extrator-empresas-licitacoes-mt
-Extrator de empresas para prospectar - participantes de licitações públicas do Portal de Aquisições de Mato Grosso.
-# Extrator de Empresas de Licitações - MT
+# Extrator de Empresas Contratadas em Licitações – MT (PNCP)
 
-## 📌 Sobre o Projeto
-
-Este projeto foi desenvolvido com o objetivo de identificar empresas participantes de licitações públicas do Estado de Mato Grosso por meio dos dados disponibilizados no Portal de Aquisições (SIAG).
-
-A solução realiza consultas automatizadas nas licitações públicas, extrai informações das empresas participantes e gera planilhas prontas para análise comercial e prospecção.
-
-O projeto nasceu como uma iniciativa prática de aprendizado em automação, coleta de dados públicos e análise de informações governamentais.
+Script em JavaScript que levanta, a partir dos dados públicos do **PNCP – Portal Nacional de Contratações Públicas**, as empresas que assinaram contratos com órgãos públicos de **Mato Grosso** num período, e gera planilhas prontas para prospecção comercial.
 
 ---
 
-## 🎯 Objetivo
+## 📌 Sobre o projeto
 
-Automatizar a identificação de empresas que participam de licitações públicas para reduzir o trabalho manual de pesquisa.
+Na prospecção B2B, os leads mais valiosos são as empresas que já vendem para o governo. Essa informação é pública e fica no PNCP, mas está espalhada por milhares de contratos de centenas de órgãos. Pesquisar um por um levaria dias.
 
-O sistema é capaz de:
+Este script automatiza a pesquisa: ele consulta a API pública do PNCP, reúne os contratos dos órgãos de MT no período escolhido e entrega duas planilhas CSV com as empresas contratadas, já com CNPJ.
 
-- Consultar licitações por período.
-- Identificar empresas participantes.
-- Identificar empresas vencedoras.
-- Identificar empresas habilitadas.
-- Identificar empresas inabilitadas.
-- Identificar empresas desclassificadas.
-- Gerar planilhas CSV para análise posterior.
+O projeto nasceu de uma necessidade real do meu trabalho como SDR em uma consultoria jurídica especializada em licitações. Também foi um estudo prático de automação, APIs e dados públicos, desenvolvido com apoio de IA.
 
 ---
 
-## 🚀 Funcionalidades
+## 🚀 O que o script faz
 
-### Consulta de Licitações
+**Etapa 1 – Lista os órgãos**
+- Consulta as contratações publicadas no período, em Mato Grosso, nas modalidades **Pregão Eletrônico, Pregão Presencial, Concorrência Eletrônica e Concorrência Presencial**.
+- Monta a lista de órgãos **municipais e federais** de MT que tiveram contratações no período.
 
-- Busca licitações públicas por período.
-- Permite filtrar licitações encerradas.
-- Processa grandes volumes de dados automaticamente.
+**Etapa 2 – Lê os contratos de cada órgão**
+- Busca os contratos assinados por cada órgão no período.
+- Mantém apenas fornecedores **pessoa jurídica** e unidades localizadas em MT.
 
-### Extração de Empresas
+**Etapa 3 – Gera as planilhas**
+- Baixa automaticamente dois arquivos CSV (separados por `;`, compatíveis com Excel).
 
-A partir das mensagens e registros públicos do processo licitatório, o sistema identifica:
+### Recursos de robustez
 
-- Nome da empresa.
-- Situação da empresa.
-- Valor vencedor.
-- Motivo de inabilitação.
-- Motivo de desclassificação.
-
-### Geração de Relatórios
-
-O sistema gera duas planilhas:
-
-#### 1. Relatório Detalhado
-
-Contendo:
-
-- Data de abertura
-- Órgão
-- Modalidade
-- Edital
-- Processo
-- Objeto
-- Lote
-- Empresa
-- Situação
-- Valor
-- Motivo
-- Link da licitação
-
-#### 2. Relatório Resumido
-
-Contendo:
-
-- Empresa
-- Quantidade de licitações
-- Quantidade de vitórias
-- Inabilitações
-- Desclassificações
-- Órgãos participantes
+- Até 3 consultas simultâneas, para não sobrecarregar a API.
+- Novas tentativas automáticas em caso de falha, com espera maior quando a API responde "muitas requisições" (erro 429).
+- Painel de progresso na própria página.
+- Botão **"Parar e baixar o que já tem"**, para interromper e salvar os dados já coletados.
+- Lista dos órgãos que não responderam, para rodar de novo depois.
 
 ---
 
-## 🛠️ Tecnologias Utilizadas
+## 📊 Planilhas geradas
 
-- JavaScript
-- API Pública do Portal de Aquisições MT
+### 1. `pncp_contratos_MT_<início>_a_<fim>.csv` (detalhado, um contrato por linha)
+
+| Coluna | Descrição |
+| --- | --- |
+| Empresa | Razão social do fornecedor |
+| CNPJ | CNPJ formatado |
+| Órgão | Órgão contratante |
+| Esfera | Municipal ou Federal |
+| Município do órgão | Município da unidade contratante |
+| Objeto | Objeto do contrato (até 300 caracteres) |
+| Valor global | Valor do contrato |
+| Data assinatura | Data de assinatura |
+| Tipo | Tipo de contrato |
+| Controle PNCP | Número de controle no PNCP |
+
+### 2. `pncp_resumo_por_empresa_MT_<início>_a_<fim>.csv` (uma empresa por linha)
+
+| Coluna | Descrição |
+| --- | --- |
+| Empresa | Razão social |
+| CNPJ | CNPJ formatado |
+| Contratos | Quantidade de contratos no período |
+| Valor total (R$) | Soma dos valores dos contratos |
+| Esferas | Esferas dos órgãos contratantes |
+| Municípios dos órgãos | Municípios atendidos |
+| Órgãos | Órgãos contratantes |
+
+O resumo sai ordenado pelas empresas com mais contratos, o que ajuda a priorizar a prospecção.
+
+---
+
+## ▶️ Como usar
+
+1. Abra o site **https://pncp.gov.br** no navegador (Chrome ou Edge).
+2. Edite a configuração no início do `script.js`:
+   ```js
+   const DATA_INICIO = '2026-01-01';
+   const DATA_FIM    = '2026-10-28';
+   const UF = 'MT';
+   ```
+3. Pressione **F12**, abra a aba **Console**, cole o script inteiro e pressione **Enter**.
+4. Acompanhe o painel no canto inferior direito da página.
+5. Ao final, as duas planilhas são baixadas automaticamente.
+
+> O script precisa rodar com a página do PNCP aberta, porque faz as consultas à API a partir do próprio site.
+
+---
+
+## 🛠️ Tecnologias
+
+- JavaScript (async/await, `fetch`, `Promise.all`)
+- API pública de consulta do PNCP
+- Console do navegador
 - CSV
-- Navegador Web
-- Console do Navegador
-
----
-
-## 📊 Fluxo do Processo
-
-```text
-Portal de Aquisições MT
-        ↓
-Consulta de Licitações
-        ↓
-Leitura dos Lotes
-        ↓
-Identificação das Empresas
-        ↓
-Tratamento dos Dados
-        ↓
-Geração dos Arquivos CSV
-```
-
----
-
-## 📁 Estrutura dos Arquivos Gerados
-
-```text
-detalhado_empresas_licitacoes_MT.csv
-
-resumo_por_empresa_MT.csv
-```
-
----
-
-## ✅ Resultados Obtidos
-
-Durante os testes do projeto foi possível:
-
-- Identificar empresas participantes.
-- Gerar bases de dados consolidadas.
-- Localizar CNPJs posteriormente.
-- Localizar contatos comerciais.
-- Apoiar atividades de prospecção comercial.
-
-O projeto demonstrou a viabilidade da utilização de dados públicos para mapeamento de fornecedores participantes de processos licitatórios.
 
 ---
 
 ## 📚 Aprendizados
 
-Durante o desenvolvimento foram aplicados conhecimentos de:
-
-- Consumo de APIs
-- JavaScript assíncrono
-- Manipulação de JSON
-- Extração e tratamento de dados
-- Geração de arquivos CSV
-- Automação de processos
-- Dados públicos governamentais
+- Consumo de API pública com paginação
+- Controle de concorrência e novas tentativas
+- Tratamento de limite de requisições (HTTP 429)
+- Manipulação de JSON e geração de CSV no navegador
+- Uso de dados públicos governamentais para prospecção comercial
+- Uso de IA como apoio no desenvolvimento
 
 ---
 
-## 🔮 Próximas Evoluções
+## ⚠️ Limitações
 
-Versão 2.0
+- Considera apenas órgãos **municipais e federais**. Órgãos do governo estadual de MT usam o portal próprio de aquisições (SIAG).
+- Traz as empresas que **assinaram contrato**, não todas as que participaram das licitações.
+- Telefones e e-mails não estão no PNCP; precisam ser buscados à parte pelo CNPJ.
 
-- Interface Web
-- Dashboard de consultas
-- Busca automática de CNPJ
-- Busca automática de telefone
-- Exportação Excel
-- Banco de dados
-- Integração com IA para análise de documentos
+---
 
-Versão 3.0
+## 🔮 Próximas evoluções
 
-- Sistema SaaS
-- Histórico de consultas
-- CRM de prospecção
-- Monitoramento de novas licitações
+- Incluir os órgãos estaduais de MT (portal SIAG)
+- Busca automática de contatos pelo CNPJ
+- Interface simples para escolher período e filtros
+- Remoção de duplicados e filtro por cidade
+- Exportação direta para Excel
 
 ---
 
 ## 👨‍💻 Autor
 
-Projeto desenvolvido como estudo prático de automação e análise de dados públicos, com foco em aprendizado, prospecção comercial e desenvolvimento de soluções baseadas em dados governamentais.
+**Nilo Julio** – SDR e consultor comercial, estudando automação e IA aplicadas a vendas B2B.
+
+Projeto feito com fins de estudo e prospecção, usando exclusivamente dados públicos.
